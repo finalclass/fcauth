@@ -1,12 +1,12 @@
-defmodule FcauthWeb do
+defmodule FCAuthWeb do
   @moduledoc """
   The entrypoint for defining your web interface, such
   as controllers, views, channels and so on.
 
   This can be used in your application as:
 
-      use FcauthWeb, :controller
-      use FcauthWeb, :view
+      use FCAuthWeb, :controller
+      use FCAuthWeb, :view
 
   The definitions below will be executed for every view,
   controller, etc, so keep them short and clean, focused
@@ -19,11 +19,11 @@ defmodule FcauthWeb do
 
   def controller do
     quote do
-      use Phoenix.Controller, namespace: FcauthWeb
+      use Phoenix.Controller, namespace: FCAuthWeb
 
       import Plug.Conn
-      import FcauthWeb.Gettext
-      alias FcauthWeb.Router.Helpers, as: Routes
+      import FCAuthWeb.Gettext
+      alias FCAuthWeb.Router.Helpers, as: Routes
     end
   end
 
@@ -31,14 +31,14 @@ defmodule FcauthWeb do
     quote do
       use Phoenix.View,
         root: "lib/fcauth_web/templates",
-        namespace: FcauthWeb
+        namespace: FCAuthWeb
 
       # Import convenience functions from controllers
       import Phoenix.Controller, only: [get_flash: 1, get_flash: 2, view_module: 1]
 
-      import FcauthWeb.ErrorHelpers
-      import FcauthWeb.Gettext
-      alias FcauthWeb.Router.Helpers, as: Routes
+      import FCAuthWeb.ErrorHelpers
+      import FCAuthWeb.Gettext
+      alias FCAuthWeb.Router.Helpers, as: Routes
     end
   end
 
@@ -53,7 +53,7 @@ defmodule FcauthWeb do
   def channel do
     quote do
       use Phoenix.Channel
-      import FcauthWeb.Gettext
+      import FCAuthWeb.Gettext
     end
   end
 

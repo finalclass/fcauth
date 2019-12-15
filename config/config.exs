@@ -8,11 +8,11 @@
 use Mix.Config
 
 # Configures the endpoint
-config :fcauth, FcauthWeb.Endpoint,
+config :fcauth, FCAuthhWeb.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "5BzdRXOQ8RGgZySooPjYM3jUd46O1sfSNjkZgdrk7p+hhzD5ndYvo4VBc4a2FmN/",
-  render_errors: [view: FcauthWeb.ErrorView, accepts: ~w(json)],
-  pubsub: [name: Fcauth.PubSub, adapter: Phoenix.PubSub.PG2]
+  render_errors: [view: FCAuthhWeb.ErrorView, accepts: ~w(json)],
+  pubsub: [name: FCAuthh.PubSub, adapter: Phoenix.PubSub.PG2]
 
 # Configures Elixir's Logger
 config :logger, :console,

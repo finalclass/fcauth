@@ -1,11 +1,11 @@
-defmodule FcauthWeb.Router do
-  use FcauthWeb, :router
+defmodule FCAuthWeb.Router do
+  use FCAuthWeb, :router
 
   pipeline :api do
     plug :accepts, ["json"]
   end
 
-  scope "/api", FcauthWeb do
+  scope "/api", FCAuthWeb do
     pipe_through :api
   end
 end

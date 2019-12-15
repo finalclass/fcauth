@@ -1,4 +1,4 @@
-# Fcauth
+# FCAuth
 
 To start your Phoenix server:
 

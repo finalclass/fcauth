@@ -10,20 +10,20 @@ defmodule FCAuth.Application do
     children = [
       # Start the endpoint when the application starts
       FCAuthWeb.Endpoint
-      # Starts a worker by calling: Fcauth.Worker.start_link(arg)
-      # {Fcauth.Worker, arg},
+      # Starts a worker by calling: FCAuth.Worker.start_link(arg)
+      # {FCAuth.Worker, arg},
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
-    opts = [strategy: :one_for_one, name: Fcauth.Supervisor]
+    opts = [strategy: :one_for_one, name: FCAuth.Supervisor]
     Supervisor.start_link(children, opts)
   end
 
   # Tell Phoenix to update the endpoint configuration
   # whenever the application is updated.
   def config_change(changed, _new, removed) do
-    FcauthWeb.Endpoint.config_change(changed, removed)
+    FCAuthWeb.Endpoint.config_change(changed, removed)
     :ok
   end
 end

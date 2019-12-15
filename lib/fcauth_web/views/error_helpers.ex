@@ -1,4 +1,4 @@
-defmodule FcauthWeb.ErrorHelpers do
+defmodule FCAuthWeb.ErrorHelpers do
   @moduledoc """
   Conveniences for translating and building error messages.
   """
@@ -25,9 +25,9 @@ defmodule FcauthWeb.ErrorHelpers do
     # should be written to the errors.po file. The :count option is
     # set by Ecto and indicates we should also apply plural rules.
     if count = opts[:count] do
-      Gettext.dngettext(FcauthWeb.Gettext, "errors", msg, msg, count, opts)
+      Gettext.dngettext(FCAuthWeb.Gettext, "errors", msg, msg, count, opts)
     else
-      Gettext.dgettext(FcauthWeb.Gettext, "errors", msg, opts)
+      Gettext.dgettext(FCAuthWeb.Gettext, "errors", msg, opts)
     end
   end
 end

@@ -1,5 +1,5 @@
-defmodule FcauthWeb.ErrorView do
-  use FcauthWeb, :view
+defmodule FCAuthWeb.ErrorView do
+  use FCAuthWeb, :view
 
   # If you want to customize a particular status code
   # for a certain format, you may uncomment below.

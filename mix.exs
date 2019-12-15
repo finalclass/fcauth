@@ -1,4 +1,4 @@
-defmodule Fcauth.MixProject do
+defmodule FCAuth.MixProject do
   use Mix.Project
 
   def project do
@@ -18,7 +18,7 @@ defmodule Fcauth.MixProject do
   # Type `mix help compile.app` for more information.
   def application do
     [
-      mod: {Fcauth.Application, []},
+      mod: {FCAuth.Application, []},
       extra_applications: [:guardian, :logger, :runtime_tools]
     ]
   end

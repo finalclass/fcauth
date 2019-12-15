@@ -1,6 +1,6 @@
-defmodule Fcauth do
+defmodule FCAuth do
   @moduledoc """
-  Fcauth keeps the contexts that define your domain
+  FCAuth keeps the contexts that define your domain
   and business logic.
 
   Contexts are also responsible for managing your data, regardless

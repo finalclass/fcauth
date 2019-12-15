@@ -1,4 +1,4 @@
-defmodule FcauthWeb.ChannelCase do
+defmodule FCAuthWeb.ChannelCase do
   @moduledoc """
   This module defines the test case to be used by
   channel tests.
@@ -21,7 +21,7 @@ defmodule FcauthWeb.ChannelCase do
       use Phoenix.ChannelTest
 
       # The default endpoint for testing
-      @endpoint FcauthWeb.Endpoint
+      @endpoint FCAuthWeb.Endpoint
     end
   end
 

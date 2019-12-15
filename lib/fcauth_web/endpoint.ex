@@ -1,7 +1,7 @@
-defmodule FcauthWeb.Endpoint do
+defmodule FCAuthWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :fcauth
 
-  socket "/socket", FcauthWeb.UserSocket,
+  socket "/socket", FCAuthWeb.UserSocket,
     websocket: true,
     longpoll: false
 
@@ -40,5 +40,5 @@ defmodule FcauthWeb.Endpoint do
     key: "_fcauth_key",
     signing_salt: "2WtSaYVE"
 
-  plug FcauthWeb.Router
+  plug FCAuthWeb.Router
 end
