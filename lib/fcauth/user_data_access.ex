@@ -1,6 +1,7 @@
 defmodule FCAuth.UserDataAccess do
   use GenServer
 
+  @spec to_tuple(%{email: String.t, password_hash: String.t}) :: {String.t, String.t}
   defp to_tuple(%{email: email, password_hash: password_hash}) do
     {email, password_hash}
   end

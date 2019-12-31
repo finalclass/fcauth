@@ -15,15 +15,6 @@ config :fcauth, FCAuthWeb.Endpoint,
   http: [:inet6, port: String.to_integer(System.get_env("PORT") || "4000")],
   secret_key_base: secret_key_base
 
-config :guardian, Guardian,
-  issuer: "FCAuth",
-  secret_key: Application.get_env("GUARDIAN_SECRET_KEY") ||
-  raise """
-    environment variable GUARDIAN_SECRET_KEY is missing.
-    You can generate one by calling: mix phx.gen.secret
-    """,
-  serializer: FCAuth.GuardianSerializer
-
 # ## Using releases (Elixir v1.9+)
 #
 # If you are doing OTP releases, you need to instruct Phoenix

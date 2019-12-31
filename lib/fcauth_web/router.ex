@@ -6,8 +6,6 @@ defmodule FCAuthWeb.Router do
   end
 
   pipeline :protected do
-    plug Guardian.Plug.VerifyHeader, realm: "Bearer"
-    plug Guardian.Plug.LoadResource
   end
 
   scope "/", FCAuthWeb do
