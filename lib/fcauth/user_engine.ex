@@ -1,0 +1,70 @@
+defmodule FCAuth.UserEngine do
+
+  alias FCAuth.User
+  alias FCAuth.UserDataAccess
+
+  @doc ~S"""
+  Create a new user
+
+  ## Examples
+
+    ### Creates a user
+  
+    iex> UserEngine.create("test100@example.com", "12345678")
+    {:ok, %User{email: "test100@example.com", password_hash: "$2b$12$P5kPo9e7AVaVnToHx9jwLu2UuDdxxM0hOR9G2C67tmTCFsF/2BTui"}}
+
+  
+    ### Can't create a user with the same email
+
+    iex> UserDataAccess.save(%User{email: "test101@example.com", password_hash: "test"})
+    iex> UserEngine.create("test101@example.com", "12345678")
+    {:error, ["user already exists"]}
+
+    ### Requires passwords with a minimum length of 8
+    iex> UserEngine.create("test101@example.com", "123")
+    {:error, ["password too short (minimum 8 chars)"]}
+  """
+  @spec create(String.t(), String.t()) :: {:ok, User.t()} | {:error, list(String.t())}
+  def create(email, password) do
+    validation_errors = create_validation_errors()
+    |> validate_user_not_exist(email)
+    |> validate_password_length(password)
+
+    if has_errors(validation_errors) do
+      {:error, validation_errors}
+    else
+      salt = Application.get_env(:fcauth, :password_salt) || Bcrypt.gen_salt()
+      user = %User{
+        email: email,
+        password_hash: Bcrypt.Base.hash_password(password, salt)
+      }
+      UserDataAccess.save(user)
+      {:ok, user}
+    end
+  end
+
+  @spec validate_password_length(list(String.t()), String.t()) :: list(String.t())
+  defp validate_password_length(errors, password) do
+    if (String.length(password) < 8) do
+      ["password too short (minimum 8 chars)" | errors]
+    else
+      errors
+    end
+  end
+  
+  @spec validate_user_not_exist(list(String.t()), String.t()) :: list(String.t())
+  defp validate_user_not_exist(errors, email) do
+    case UserDataAccess.get(email) do
+      nil -> errors
+      _ -> ["user already exists" | errors]
+    end
+  end
+
+  @spec has_errors(list(String.t())) :: boolean()
+  defp has_errors([]), do: false
+  defp has_errors(_), do: true
+
+  @spec create_validation_errors() :: list(String.t())
+  defp create_validation_errors(), do: []
+  
+end
