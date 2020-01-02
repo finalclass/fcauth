@@ -3,31 +3,34 @@ defmodule FCAuthWeb.Router do
 
   pipeline :public do
     plug :accepts, ["json"]
+    
+    plug FCAuthWeb.GuardianPipeline
   end
 
   pipeline :protected do
+    plug Guardian.Plug.EnsureAuthenticated
   end
 
   scope "/", FCAuthWeb do
     pipe_through :public
 
-    post "/login", LoginController, :login
+    post "/login", SessionController, :login
+
+    post "/sign-up", RegistrationController, :register
+    get "/sign-up/confirm-email/:token", RegistrationController, :confirm
     
     post "/remind-password", RemindPasswordController, :request
     get "/remind-password/change", RemindPasswordController, :change_password
-    
-    post "/register", RegistrationController, :register
-    get "/register/confirm-email/:token", RegistrationController, :confirm
   end
 
   scope "/users", FCAuthWeb do
     pipe_through :public
     pipe_through :protected
-    
-    get "/", UserController, :list
+
+    get "/", UserController, :index
     get "/:id", UserController, :get
-    delete "/:id", UserController, :delete
+    post "/", UserController, :create
     put "/:id", UserController, :update
-    post "/:id", UserController, :create
+    delete "/:id", UserController, :delete
   end
 end

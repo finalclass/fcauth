@@ -18,10 +18,8 @@ defmodule FCAuthWeb.RegistrationTest do
 
   test "Creates a new user in the database", %{conn: conn} do
     user = example_user()
-    conn = post(conn, Routes.registration_path(conn, :register), user)
+    post(conn, Routes.registration_path(conn, :register), user)
 
-    body = json_response(conn, 200)
-    
     assert UserDataAccess.get(user.email).email == user.email
   end
 end

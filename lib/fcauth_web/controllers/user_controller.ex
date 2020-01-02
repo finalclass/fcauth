@@ -1,15 +1,11 @@
 defmodule FCAuthWeb.UserController do
   use FCAuthWeb, :controller
   
-  def list(conn, _params) do
+  def index(conn, _params) do
     conn
   end
 
   def get(conn, _params) do
-    conn
-  end
-  
-  def update(conn, _params) do
     conn
   end
 
@@ -17,6 +13,10 @@ defmodule FCAuthWeb.UserController do
     conn
   end
   
+  def update(conn, _params) do
+    conn
+  end
+
   def delete(conn, _params) do
     conn
   end

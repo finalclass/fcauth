@@ -19,7 +19,7 @@ defmodule FCAuth.MixProject do
   def application do
     [
       mod: {FCAuth.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :guardian]
     ]
   end
 
@@ -37,7 +37,10 @@ defmodule FCAuth.MixProject do
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
-      {:dialyxir, "~> 1.0.0-rc.7", only: [:dev], runtime: false}
+      {:dialyxir, "~> 1.0.0-rc.7", only: [:dev], runtime: false},
+      {:guardian, "~> 2.0"},
+      {:bcrypt_elixir, "~> 2.0"},
+      {:mailman, "~> 0.4.2"}
     ]
   end
 end

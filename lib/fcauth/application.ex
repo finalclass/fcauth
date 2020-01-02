@@ -9,9 +9,10 @@ defmodule FCAuth.Application do
     # List all child processes to be supervised
     children = [
       # Start the endpoint when the application starts
-      FCAuthWeb.Endpoint
+      FCAuthWeb.Endpoint,
       # Starts a worker by calling: FCAuth.Worker.start_link(arg)
       # {FCAuth.Worker, arg},
+      {FCAuth.UserDataAccess, file_path: Application.get_env(:fcauth, :users_data_file)}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

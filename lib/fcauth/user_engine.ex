@@ -11,18 +11,23 @@ defmodule FCAuth.UserEngine do
     ### Creates a user
   
     iex> UserEngine.create("test100@example.com", "12345678")
-    {:ok, %User{email: "test100@example.com", password_hash: "$2b$12$P5kPo9e7AVaVnToHx9jwLu2UuDdxxM0hOR9G2C67tmTCFsF/2BTui"}}
-
+    {:ok, %User{
+      email: "test100@example.com", 
+      password_hash: "$2b$12$P5kPo9e7AVaVnToHx9jwLu2UuDdxxM0hOR9G2C67tmTCFsF/2BTui", 
+      status: "created"
+    }}
   
     ### Can't create a user with the same email
 
-    iex> UserDataAccess.save(%User{email: "test101@example.com", password_hash: "test"})
+    iex> UserDataAccess.save(%User{email: "test101@example.com", password_hash: "test", status: "created"})
     iex> UserEngine.create("test101@example.com", "12345678")
     {:error, ["user already exists"]}
 
     ### Requires passwords with a minimum length of 8
+
     iex> UserEngine.create("test101@example.com", "123")
     {:error, ["password too short (minimum 8 chars)"]}
+    
   """
   @spec create(String.t(), String.t()) :: {:ok, User.t()} | {:error, list(String.t())}
   def create(email, password) do
@@ -36,7 +41,8 @@ defmodule FCAuth.UserEngine do
       salt = Application.get_env(:fcauth, :password_salt) || Bcrypt.gen_salt()
       user = %User{
         email: email,
-        password_hash: Bcrypt.Base.hash_password(password, salt)
+        password_hash: Bcrypt.Base.hash_password(password, salt),
+        status: "created"
       }
       UserDataAccess.save(user)
       {:ok, user}

@@ -1,42 +1,115 @@
 defmodule FCAuth.UserDataAccess do
   use GenServer
+  alias FCAuth.User
 
-  @spec to_tuple(%{email: String.t, password_hash: String.t}) :: {String.t, String.t}
-  defp to_tuple(%{email: email, password_hash: password_hash}) do
-    {email, password_hash}
-  end
+  #######
+  # API
+  #######
+  @doc "Start the process"
+  @spec start_link([file_path: String.t()]) :: :ignore | {:error, {:already_started, pid()} | any()} | {:ok, pid()}
+  def start_link(opts), do: GenServer.start_link(__MODULE__, opts, name: __MODULE__)
 
-  defp to_struct({email, password_hash}) do
-    %{email: email, password_hash: password_hash}
-  end
+  @doc ~S"""
+  Get user by email (id)
+  
+  ## Examples
+  
+  iex> UserDataAccess.save(%User{email: "test@example.com", password_hash: "abc123", status: "created"})
+  iex> UserDataAccess.get("test@example.com")
+  %User{email: "test@example.com", password_hash: "abc123", status: "created"}
 
+  """
+  @spec get(String.t) :: User.t() | nil
   def get(id), do: GenServer.call(__MODULE__, {:get, id})
-  def all(), do: GenServer.call(__MODULE__, {:all})
-  def save(user), do: GenServer.call(__MODULE__, {:save, user})
-  def delete(user_id), do: GenServer.call(__MODULE__, {:delete, user_id})
-  def start_link(opts), do: GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
 
+  @doc ~S"""
+  Get all users from the database
+  
+  ## Examples
+  
+      iex> UserDataAccess.save(%User{email: "test1@example.com", password_hash: "abc123", status: "created"})
+      iex> UserDataAccess.save(%User{email: "test2@example.com", password_hash: "abc123", status: "created"})
+      iex> UserDataAccess.all()
+      [
+        %User{email: "test1@example.com", password_hash: "abc123", status: "created"},
+        %User{email: "test2@example.com", password_hash: "abc123", status: "created"}
+      ]
+
+  """
+  @spec all() :: list(User.t())
+  def all(), do: GenServer.call(__MODULE__, {:all})
+
+  @doc ~S"""
+  Save (insert of update) the user
+  
+  ## Examples
+  
+    ### Save a new document
+
+    iex> UserDataAccess.save(%User{email: "test@example.com", password_hash: "abc123", status: "created"})
+    true
+    iex> UserDataAccess.get("test@example.com")
+    %User{email: "test@example.com", password_hash: "abc123", status: "created"}
+
+    ### Updates existing
+
+    iex> UserDataAccess.save(%User{email: "test@example.com", password_hash: "changed", status: "created"})
+    true
+    iex> UserDataAccess.all()
+    [%User{email: "test@example.com", password_hash: "changed", status: "created"}]
+
+  """
+  @spec save(User.t()) :: boolean() | {:error, any()}
+  def save(user), do: GenServer.call(__MODULE__, {:save, user})
+
+  @doc ~S"""
+  Delete a user by email (id)
+
+  ## Examples
+
+    iex> UserDataAccess.save(%User{email: "test1@example.com", password_hash: "abc123", status: "created"})
+    iex> UserDataAccess.delete("test1@example.com")
+    iex> UserDataAccess.get("test1@example.com")
+    nil
+
+"""
+  @spec delete(String.t()) :: :ok | {:error, any()}
+  def delete(user_id), do: GenServer.call(__MODULE__, {:delete, user_id})
+
+  #######
+  # impl
+  #######
+
+  @type user_da_state :: %{table: reference()}
+  
   @impl true
-  def init(_) do
-    {:ok, table} = :dets.open_file(:disk_storage, [type: :set])
+  @spec init([file_path: String.t()]) :: {:ok, user_da_state()}
+  def init(file_path: file_path) do
+    # IO.inspect("INIININI", file_path)
+    {:ok, table} = :dets.open_file(String.to_atom(file_path), [type: :set])
     {:ok, %{table: table}}
   end
 
   @impl true
   def handle_call({:get, id}, _from, %{table: table} = state) do
-    user = :dets.lookup(table, id) |> List.first() |> to_struct()
+    user = case :dets.lookup(table, id) |> List.first() do
+	     nil -> nil
+             data -> User.to_struct(data)
+           end
     {:reply, user, state}
   end
 
   @impl true
   def handle_call({:all}, _from, %{table: table} = state) do
     users = :dets.match(table, :"$1")
+    |> Enum.map(fn [tuple|_] -> User.to_struct(tuple) end)
+    
     {:reply, users, state}
   end
 
   @impl true
   def handle_call({:save, user}, _from, %{table: table} = state) do
-    result = :dets.insert_new(table, user |> to_tuple())
+    result = :dets.insert_new(table, user |> User.to_tuple())
     {:reply, result, state}
   end
 
