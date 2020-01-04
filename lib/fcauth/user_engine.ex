@@ -10,12 +10,13 @@ defmodule FCAuth.UserEngine do
 
     ### Creates a user
   
-    iex> UserEngine.create("test100@example.com", "12345678")
-    {:ok, %User{
-      email: "test100@example.com", 
-      password_hash: "$2b$12$P5kPo9e7AVaVnToHx9jwLu2UuDdxxM0hOR9G2C67tmTCFsF/2BTui", 
-      status: "created"
-    }}
+    iex> {:ok, user} = UserEngine.create("test100@example.com", "12345678")
+    iex> user.email
+    "test100@example.com"
+    iex> user.password_hash
+    "$2b$12$P5kPo9e7AVaVnToHx9jwLu2UuDdxxM0hOR9G2C67tmTCFsF/2BTui"
+    iex> user.status
+    "created"
   
     ### Can't create a user with the same email
 
@@ -42,7 +43,9 @@ defmodule FCAuth.UserEngine do
       user = %User{
         email: email,
         password_hash: Bcrypt.Base.hash_password(password, salt),
-        status: "created"
+        status: "created",
+        signup_token: Bcrypt.gen_salt() <> Bcrypt.gen_salt(),
+        signup_token_generated_at: DateTime.utc_now() |> DateTime.to_unix()
       }
       UserDataAccess.save(user)
       {:ok, user}

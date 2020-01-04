@@ -85,7 +85,6 @@ defmodule FCAuth.UserDataAccess do
   @impl true
   @spec init([file_path: String.t()]) :: {:ok, user_da_state()}
   def init(file_path: file_path) do
-    # IO.inspect("INIININI", file_path)
     {:ok, table} = :dets.open_file(String.to_atom(file_path), [type: :set])
     {:ok, %{table: table}}
   end

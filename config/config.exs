@@ -28,6 +28,8 @@ config :fcauth, FCAuth.Guardian,
   issuer: "fcauth",
   secret_key: "7ded+qtAjww2Ez/iSr+hoD34I+cv6ioMGelv4HEUAc9Q+0S/HlRhlkHibwjiaVmG"
 
+config :fcauth, :mailer, FCAuth.Mailer
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env()}.exs"
