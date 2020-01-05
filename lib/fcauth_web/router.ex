@@ -16,8 +16,8 @@ defmodule FCAuthWeb.Router do
 
     post "/login", SessionController, :login
 
-    post "/sign-up", RegistrationController, :register
-    get "/sign-up/confirm-email/:token", RegistrationController, :confirm
+    post "/sign-up", SignupController, :register
+    get "/sign-up/confirm-email/:token", SignupController, :confirm
     
     post "/remind-password", RemindPasswordController, :request
     get "/remind-password/change", RemindPasswordController, :change_password

@@ -25,4 +25,9 @@ defmodule FCAuth.User do
       signup_token_generated_at: signup_token_generated_at
     }
   end
+
+  @spec signup_token_matcher(String.t()) :: tuple()
+  def signup_token_matcher(token) do
+    {:_, :_, :_, token, :_}
+  end
 end

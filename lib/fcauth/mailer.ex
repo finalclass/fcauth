@@ -3,10 +3,10 @@ defmodule FCAuth.Mailer do
     Mailman.deliver(
       %Mailman.Email{
         subject: mail_params.subject,
-        from: mail_params.from || "pocztmistrz@finalclass.net",
+        from: Map.get(mail_params, :from, "pocztmistrz@finalclass.net"),
         to: mail_params.to,
-        text: mail_params.text,
-        html: mail_params.html
+        text: Map.get(mail_params, :text, ""),
+        html: Map.get(mail_params, :html, "")
       },
       config()
     )

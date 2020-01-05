@@ -17,7 +17,7 @@ config :fcauth, FCAuthWeb.Endpoint,
 
 config :fcauth,
        :mailer_password,
-       System.get_env(MAILER_PASSWORD) ||
+       System.get_env("MAILER_PASSWORD") ||
          raise("environment variable MAILER_PASSWORD is missing")
 
 # ## Using releases (Elixir v1.9+)

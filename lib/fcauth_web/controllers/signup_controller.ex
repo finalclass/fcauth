@@ -1,4 +1,4 @@
-defmodule FCAuthWeb.RegistrationController do
+defmodule FCAuthWeb.SignupController do
   use FCAuthWeb, :controller
   alias FCAuth.UserEngine
 
@@ -10,22 +10,22 @@ defmodule FCAuthWeb.RegistrationController do
         conn |> render("register-result.json", %{result: %{ok: false, errors: errors}})
 
       {:ok, user} ->
-        confirm_url = FCAuthWeb.Router.Helpers.url(conn) <> Routes.registration_path(conn, :confirm, user.signup_token)
-        @mailer.deliver(%{
+        confirm_url = FCAuthWeb.Router.Helpers.url(conn) <> Routes.signup_path(conn, :confirm, user.signup_token)
+        {:ok, _message} = @mailer.deliver(%{
           subject: "Potwierdź rejestracje",
           to: [email],
           html:
-            FCAuthWeb.RegistrationView.render(
+            FCAuthWeb.SignupView.render(
               "confirm.html",
               %{confirm_url: confirm_url, email: email}
             )
         })
-
+        
         conn |> render("register-result.json", %{result: %{ok: true}})
     end
   end
 
   def confirm(conn, _params) do
-    conn
+    conn |> render("confirm-result.json", %{result: %{ok: true }})
   end
 end

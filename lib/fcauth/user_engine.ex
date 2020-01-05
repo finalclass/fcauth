@@ -52,6 +52,43 @@ defmodule FCAuth.UserEngine do
     end
   end
 
+  @doc ~S"""
+  Confirms user by his signup token
+
+  ## Examples
+  
+    iex> {:ok, user} = UserEngine.create("test200@example.com", "12345678")
+    iex> UserEngine.confirm(user.signup_token)
+    :ok
+    iex> user = UserDataAccess.get(user.email)
+    iex> user.status
+    "confirmed"
+    iex> user.signup_token
+    ""
+    iex> user.signup_token_generated_at
+    0
+  """
+  @spec confirm(Stirng.t()) :: :ok | {:error, term()}
+  def confirm(token) do
+    case UserDataAccess.find_by_signup_token(token) do
+      %User{} = user ->
+        now = DateTime.utc_now() |> DateTime.to_unix()
+        token_validity = 24 * 60 * 60 # tokens are valid 1 day
+        if (now - user.signup_token_generated_at > token_validity) do
+          {:error, :token_expired}
+        else
+          if (user.status != "created") do
+	    {:error, :user_already_active}
+          else
+            user = %{user | signup_token: "", signup_token_generated_at: 0, status: "confirmed"}
+            UserDataAccess.save(user)
+            :ok
+          end
+        end
+      _ -> :error
+    end
+  end
+
   @spec validate_password_length(list(String.t()), String.t()) :: list(String.t())
   defp validate_password_length(errors, password) do
     if (String.length(password) < 8) do

@@ -1,4 +1,4 @@
-defmodule FCAuthWeb.RegistrationView do
+defmodule FCAuthWeb.SignupView do
   use FCAuthWeb, :view
 
   def render("confirm.html", %{confirm_url: confirm_url, email: email}) do
