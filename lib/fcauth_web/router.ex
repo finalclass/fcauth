@@ -19,18 +19,18 @@ defmodule FCAuthWeb.Router do
     post "/sign-up", SignupController, :register
     get "/sign-up/confirm-email/:token", SignupController, :confirm
     
-    post "/remind-password", RemindPasswordController, :request
-    get "/remind-password/change", RemindPasswordController, :change_password
+    # post "/remind-password", RemindPasswordController, :request
+    # get "/remind-password/change", RemindPasswordController, :change_password
   end
 
-  scope "/users", FCAuthWeb do
-    pipe_through :public
-    pipe_through :protected
+  # scope "/users", FCAuthWeb do
+  #   pipe_through :public
+  #   pipe_through :protected
 
-    get "/", UserController, :index
-    get "/:id", UserController, :get
-    post "/", UserController, :create
-    put "/:id", UserController, :update
-    delete "/:id", UserController, :delete
-  end
+  #   get "/", UserController, :index
+  #   get "/:id", UserController, :get
+  #   post "/", UserController, :create
+  #   put "/:id", UserController, :update
+  #   delete "/:id", UserController, :delete
+  # end
 end

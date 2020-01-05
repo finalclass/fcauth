@@ -2,7 +2,7 @@ defmodule FCAuthWeb.GuardianPipeline do
   use Guardian.Plug.Pipeline,
     otp_app: :auth_me,
     error_handler: FCAuthWeb.ErrorHandler,
-    module: FCAuthWeb.Guardian
+    module: FCAuth.Guardian
 
   # If there is a session token, restrict it to an access token and validate it
   plug Guardian.Plug.VerifySession, claims: %{"typ" => "access"}

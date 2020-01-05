@@ -4,6 +4,53 @@ defmodule FCAuth.UserEngine do
   alias FCAuth.UserDataAccess
 
   @doc ~S"""
+  Generates JWT token
+  
+  ## Examples
+
+    ### Returns JWT if login and password are correct
+
+    iex> UserEngine.create("test-login@example.com", "my-password")
+    iex> user = UserDataAccess.get("test-login@example.com")
+    iex> UserEngine.confirm(user.signup_token)
+    iex> {:ok, jwt} = UserEngine.login(user.email, "my-password")
+    iex> is_binary(jwt)
+    true
+    iex> {:ok, claims} = FCAuth.Guardian.decode_and_verify(jwt)
+    iex> claims["sub"]
+    "test-login@example.com"
+
+    ### On invalid username or password returns error
+
+    iex> UserEngine.login("invalid", "invalid")
+    {:error, :invalid_email_or_password}
+
+    ### Also if user status is "created" (so he has not confirmed his email) then return an error
+    iex> UserEngine.create("test-login@example.com", "my-password")
+    iex> UserEngine.login("test-login@example.com", "my-password")
+    {:error, :user_not_activated}
+  
+  """
+  @spec login(String.t(), String.t()) :: {:ok, term()}
+  def login(email, password) do
+    case UserDataAccess.get(email) do
+      nil -> {:error, :invalid_email_or_password}
+      %User{} = user ->
+        if Bcrypt.verify_pass(password, user.password_hash) do
+          case user.status do
+	    "created" ->
+              {:error, :user_not_activated}
+            _ ->
+              {:ok, jwt, _full_claims} = FCAuth.Guardian.encode_and_sign(user)
+              {:ok, jwt}
+          end
+        else
+          {:error, :invalid_email_or_password}
+        end
+    end
+  end
+  
+  @doc ~S"""
   Create a new user
 
   ## Examples

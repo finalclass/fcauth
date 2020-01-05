@@ -1,4 +1,4 @@
-defmodule FCAuthWeb.LoginView do
+defmodule FCAuthWeb.SessionView do
   use FCAuthWeb, :view
 
   def render("login-response.json", %{result: result}) do

@@ -1,4 +1,4 @@
-defmodule FCAuthWeb.Guardian do
+defmodule FCAuth.Guardian do
   use Guardian, otp_app: :fcauth
   alias FCAuth.UserDataAccess
 
