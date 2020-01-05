@@ -28,3 +28,5 @@ fcauth-*.tar
 /priv/static/
 
 disk_storage
+
+/*.dets
