@@ -68,27 +68,49 @@ defmodule FCAuth.UserEngine do
     iex> user.signup_token_generated_at
     0
   """
-  @spec confirm(Stirng.t()) :: :ok | {:error, term()}
+  @spec confirm(String.t()) :: :ok | {:error, term()}
   def confirm(token) do
-    case UserDataAccess.find_by_signup_token(token) do
-      %User{} = user ->
-        now = DateTime.utc_now() |> DateTime.to_unix()
-        token_validity = 24 * 60 * 60 # tokens are valid 1 day
-        if (now - user.signup_token_generated_at > token_validity) do
-          {:error, :token_expired}
-        else
-          if (user.status != "created") do
-	    {:error, :user_already_active}
-          else
-            user = %{user | signup_token: "", signup_token_generated_at: 0, status: "confirmed"}
-            UserDataAccess.save(user)
-            :ok
-          end
-        end
-      _ -> :error
+    result = token
+    |> check_signup_token_exists()
+    |> check_signup_token_status()
+    |> check_signup_token_is_not_expired()
+
+    case result do
+      {:ok, user} ->
+        user = %{user | status: "confirmed", signup_token: "", signup_token_generated_at: 0}
+        UserDataAccess.save(user)
+        :ok
+      other -> other
     end
   end
 
+  @spec check_signup_token_exists(String.t()) :: {:ok, User.t()} | {:error, :token_does_not_exists}
+  defp check_signup_token_exists(token) do
+    case UserDataAccess.find_by_signup_token(token) do
+      %User{} = user -> {:ok, user}
+      _ -> {:error, :token_does_not_exists}
+    end
+  end
+
+  @spec check_signup_token_is_not_expired({:ok, User.t()} | {:error, term()}) :: {:ok, User.t()} | {:error, term()}
+  defp check_signup_token_is_not_expired({:ok, user}) do
+    now = DateTime.utc_now() |> DateTime.to_unix()
+    token_validity = 24 * 60 * 60 # tokens are valid 1 day
+    if (now - user.signup_token_generated_at > token_validity) do
+      {:error, :token_expired}
+    else
+      {:ok, user}
+    end
+  end
+  defp check_signup_token_is_not_expired(error), do: error
+
+  @spec check_signup_token_status({:ok, User.t()} | {:error, term()}) :: {:ok, User.t()} | {:error, term()}
+  defp check_signup_token_status({:ok, %{status: "created"} = user}) do
+    {:ok, user}
+  end
+  defp check_signup_token_status({:ok, _}), do: {:error, :user_already_confirmed}
+  defp check_signup_token_status(error), do: error
+  
   @spec validate_password_length(list(String.t()), String.t()) :: list(String.t())
   defp validate_password_length(errors, password) do
     if (String.length(password) < 8) do

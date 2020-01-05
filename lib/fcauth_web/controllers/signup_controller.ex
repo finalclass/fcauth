@@ -25,7 +25,20 @@ defmodule FCAuthWeb.SignupController do
     end
   end
 
-  def confirm(conn, _params) do
-    conn |> render("confirm-result.json", %{result: %{ok: true }})
+  def confirm(conn, %{"token" => token}) do
+    case UserEngine.confirm(token) do
+      :ok ->
+        conn |> render("confirm-result.json", %{result: %{ok: true}})
+      {:error, :token_does_not_exists } ->
+        conn |> render("confirm-result.json", %{result: %{ok: true}})
+      {:error, :token_expired} ->
+        conn
+        |> put_status(403)
+        |> render("confirm-result.json", %{result: %{error: "token_expired"}})
+      {:error, :user_already_confirmed} ->
+        conn
+        |> put_status(400)
+        |> render("confirm-result.json", %{result: %{error: "user_already_confirmed"}})
+    end
   end
 end
