@@ -24,7 +24,8 @@ defmodule FCAuthWeb.SessionControllerTest do
     body = json_response(conn, 400)
     assert body["error"] == "invalid_email_or_password"
   end
-  
+
+  @tag :login
   test "on proper email+password return jwt token", %{conn: conn} do
     conn =
       post(conn, Routes.session_path(conn, :login), %{

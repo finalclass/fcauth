@@ -19,6 +19,8 @@ defmodule FCAuth.UserEngine do
     iex> {:ok, claims} = FCAuth.Guardian.decode_and_verify(jwt)
     iex> claims["sub"]
     "test-login@example.com"
+    iex> claims["rls"] # user roles
+    []
 
     ### On invalid username or password returns error
 
@@ -41,7 +43,7 @@ defmodule FCAuth.UserEngine do
 	    "created" ->
               {:error, :user_not_activated}
             _ ->
-              {:ok, jwt, _full_claims} = FCAuth.Guardian.encode_and_sign(user)
+              {:ok, jwt, _full_claims} = FCAuth.Guardian.encode_and_sign(user, %{"rls" => user.roles})
               {:ok, jwt}
           end
         else
