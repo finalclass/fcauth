@@ -13,4 +13,8 @@ defmodule FCAuthWeb.UserView do
     result
   end
 
+  def render("add-role-result.json", %{result: result}) do
+    result
+  end
+
 end

@@ -1,6 +1,6 @@
 defmodule FCAuthWeb.UserController do
   use FCAuthWeb, :controller
-  
+
   def index(conn, _params) do
     conn
   end
@@ -19,6 +19,10 @@ defmodule FCAuthWeb.UserController do
 
   def delete(conn, _params) do
     conn
+  end
+
+  def add_role(conn, _params) do
+    conn |> render("add-role-result.json", %{result: %{ok: true }})
   end
   
 end
