@@ -101,6 +101,33 @@ defmodule FCAuth.UserEngine do
     end
   end
 
+
+  @doc ~S"""
+  Adds a role to a user
+
+  ## Examples
+  
+    ### adds new role
+
+    iex> UserDataAccess.save(%User{email: "test-roles@example.com"})
+    iex> UserEngine.add_role("test-roles@example.com", "test")
+    iex> UserDataAccess.get("test-roles@example.com") |> Map.get(:roles)
+    ["test"]
+  """
+  @spec add_role(Stirng.t(), String.t()) :: :ok | nil
+  def add_role(userId, role) do
+    case UserDataAccess.get(userId) do
+      nil -> nil
+      user ->
+        if user.roles |> Enum.member?(role) do
+	  true # role already exists
+        else
+          user = %{user | roles: [role | user.roles]}
+          :ok = UserDataAccess.save(user)
+        end
+    end
+  end
+  
   @doc ~S"""
   Confirms user by his signup token
 

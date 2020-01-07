@@ -72,7 +72,7 @@ defmodule FCAuth.UserDataAccess do
     [%User{email: "test@example.com", password_hash: "changed", status: "created"}]
 
   """
-  @spec save(User.t()) :: boolean() | {:error, any()}
+  @spec save(User.t()) :: :ok | {:error, any()}
   def save(user), do: GenServer.call(__MODULE__, {:save, user})
 
   @doc ~S"""

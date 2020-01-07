@@ -49,7 +49,8 @@ defmodule FCAuthWeb.UserControllerTest do
 
       assert conn.status == 401
     end
-    
+
+    @tag :user
     test "can add role", %{conn: conn, admin_jwt: jwt} do
       conn = conn
       |> Plug.Conn.put_req_header("authorization", "Bearer #{jwt}")
@@ -59,7 +60,6 @@ defmodule FCAuthWeb.UserControllerTest do
       user = UserDataAccess.get(@email)
       assert user.roles == ["test"]
     end
-
     
   end
 end
