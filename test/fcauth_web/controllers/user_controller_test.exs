@@ -60,6 +60,21 @@ defmodule FCAuthWeb.UserControllerTest do
       user = UserDataAccess.get(@email)
       assert user.roles == ["test"]
     end
+  end
+
+  describe "removing roles" do
+    @tag :user
+    test "on missing user give 404", %{conn: conn, admin_jwt: jwt} do
+      
+    end
     
+    @tag :user
+    test "if no role exists, don't panic", %{conn: conn, admin_jwt: jwt} do
+      conn = conn
+      |> Plug.Conn.put_req_header("authorization", "Bearer #{jwt}")
+      |> delete(Routes.user_path(conn, :remove_role, @email, "test"))
+
+      assert conn.status == 200
+    end
   end
 end

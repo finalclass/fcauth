@@ -9,11 +9,7 @@ defmodule FCAuthWeb.UserView do
     user
   end
 
-  def render("delete-result.json", %{result: result}) do
-    result
-  end
-
-  def render("add-role-result.json", %{result: result}) do
+  def render("generic-result.json", %{result: result}) do
     result
   end
 

@@ -24,15 +24,25 @@ defmodule FCAuthWeb.UserController do
 
   def add_role(conn, %{"id" => userId, "role" => role}) do
     case UserEngine.add_role(userId, role) do
-      nil ->
+      {:error, :not_found} ->
         conn
-        |> put_status(500)
-        |> render("add-role-result.json", %{result: %{error: :internal_server_error}})
+        |> put_status(404)
+        |> render("generic-result.json", %{result: %{error: :not_found}})
       _ ->
         conn
-        |> render("add-role-result.json", %{result: %{ok: true}})
+        |> render("generic-result.json", %{result: %{ok: true}})
     end
-    
+  end
+
+  def remove_role(conn, %{"id" => userId, "role" => role}) do
+    case UserEngine.remove_role(userId, role) do
+      {:error, :not_found} ->
+        conn
+        |> put_status(404)
+        |> render("generic-result.json", %{result: %{error: :not_found}})
+      - ->
+        conn |> render("generic-result.json", %{result: %{ok: true}})
+    end
   end
   
 end

@@ -117,14 +117,21 @@ defmodule FCAuth.UserEngine do
   @spec add_role(Stirng.t(), String.t()) :: :ok | nil
   def add_role(userId, role) do
     case UserDataAccess.get(userId) do
-      nil -> nil
+      nil -> {:error, :not_found}
       user ->
-        if user.roles |> Enum.member?(role) do
-	  true # role already exists
-        else
+        if not user.roles |> Enum.member?(role) do
           user = %{user | roles: [role | user.roles]}
           :ok = UserDataAccess.save(user)
         end
+        :ok
+    end
+  end
+
+  def remove_role(userId, role) do
+    case UserDataAccess.get(userId) do
+      nil -> {:error, :not_found}
+      user ->
+        # @TODO implement roles removal
     end
   end
   
