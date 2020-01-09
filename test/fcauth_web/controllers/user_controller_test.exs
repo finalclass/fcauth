@@ -108,4 +108,24 @@ defmodule FCAuthWeb.UserControllerTest do
       assert Enum.find(users, &(&1["email"] == "not-confirmed")) == nil
     end
   end
+
+  describe "get" do
+    def get_user(%{conn: conn, admin_jwt: jwt}, email) do
+      conn
+      |> Plug.Conn.put_req_header("authorization", "Bearer #{jwt}")
+      |> get(Routes.user_path(conn, :get, email))
+    end
+
+    @tag :user
+    test "gets a user", ctx do
+      conn = get_user(ctx, @email)
+      user = json_response(conn, 200)
+      assert user["email"] == @email
+    end
+
+    @tag :user
+    test "on missing user get 404", ctx do
+      assert get_user(ctx, "MISSING").status == 404
+    end
+  end
 end

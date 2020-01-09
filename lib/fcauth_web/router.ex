@@ -43,7 +43,7 @@ defmodule FCAuthWeb.Router do
     put "/:id/roles/:role", UserController, :add_role
     delete "/:id/roles/:role", UserController, :remove_role
     get "/", UserController, :index
-  #   get "/:id", UserController, :get
+    get "/:id", UserController, :get
   #   post "/", UserController, :create
   #   put "/:id", UserController, :update
   #   delete "/:id", UserController, :delete

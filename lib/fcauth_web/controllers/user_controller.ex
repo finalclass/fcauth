@@ -8,14 +8,17 @@ defmodule FCAuthWeb.UserController do
     conn |> render("users.json", %{users: all_confirmed})
   end
 
-  def get(conn, _params) do
-    conn
+  def get(conn, %{"id" => id}) do
+    case UserDataAccess.get(id) do
+      nil -> conn |> put_status(404) |> render("generic-result.json", %{result: %{error: :not_found}})
+      user -> conn |> render("user.json", %{user: user})
+    end
   end
 
   def create(conn, _params) do
     conn
   end
-  
+
   def update(conn, _params) do
     conn
   end
@@ -30,6 +33,7 @@ defmodule FCAuthWeb.UserController do
         conn
         |> put_status(404)
         |> render("generic-result.json", %{result: %{error: :not_found}})
+
       _ ->
         conn
         |> render("generic-result.json", %{result: %{ok: true}})
@@ -42,9 +46,9 @@ defmodule FCAuthWeb.UserController do
         conn
         |> put_status(404)
         |> render("generic-result.json", %{result: %{error: :not_found}})
+
       _ ->
         conn |> render("generic-result.json", %{result: %{ok: true}})
     end
   end
-  
 end
