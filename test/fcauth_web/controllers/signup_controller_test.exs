@@ -78,7 +78,7 @@ defmodule FCAuthWeb.SignupTest do
       user_data = %FCAuth.User{
         email: "test500@example.com",
         signup_token: "my-token",
-        status: "confirmed"
+        status: :confirmed
       }
 
       UserDataAccess.save(user_data)

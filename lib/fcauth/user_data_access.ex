@@ -14,9 +14,9 @@ defmodule FCAuth.UserDataAccess do
 
   ## Examples
 
-  iex> UserDataAccess.save(%User{email: "test@example.com", password_hash: "abc123", status: "created"})
+  iex> UserDataAccess.save(%User{email: "test@example.com", password_hash: "abc123", status: :created})
   iex> UserDataAccess.get("test@example.com")
-  %User{email: "test@example.com", password_hash: "abc123", status: "created"}
+  %User{email: "test@example.com", password_hash: "abc123", status: :created}
 
   """
   @spec get(String.t) :: User.t() | nil
@@ -28,18 +28,32 @@ defmodule FCAuth.UserDataAccess do
 
   ## Examples
 
-      iex> UserDataAccess.save(%User{email: "test1@example.com", password_hash: "abc123", status: "created"})
-      iex> UserDataAccess.save(%User{email: "test2@example.com", password_hash: "abc123", status: "created"})
+      iex> UserDataAccess.save(%User{email: "test1@example.com", password_hash: "abc123", status: :created})
+      iex> UserDataAccess.save(%User{email: "test2@example.com", password_hash: "abc123", status: :created})
       iex> UserDataAccess.all()
       [
-        %User{email: "test2@example.com", password_hash: "abc123", status: "created"},
-        %User{email: "test1@example.com", password_hash: "abc123", status: "created"}
+        %User{email: "test2@example.com", password_hash: "abc123", status: :created},
+        %User{email: "test1@example.com", password_hash: "abc123", status: :created}
       ]
 
   """
   @spec all() :: list(User.t())
   def all(), do: GenServer.call(__MODULE__, {:all})
 
+  @doc ~S"""
+  Gets users with a given status
+
+  ## Examples
+
+    iex> UserDataAccess.save(%User{email: "1", status: :foo})
+    iex> UserDataAccess.save(%User{email: "2", status: :bar})
+    iex> UserDataAccess.all_by_status(:foo) |> length()
+    1
+  
+  """
+  @spec all_by_status(atom()) :: list(User.t())
+  def all_by_status(status), do: GenServer.call(__MODULE__, {:all_by_status, status})
+  
   @doc ~S"""
   Searches for a user by token
 
@@ -59,17 +73,17 @@ defmodule FCAuth.UserDataAccess do
 
     ### Save a new document
 
-    iex> UserDataAccess.save(%User{email: "test@example.com", password_hash: "abc123", status: "created"})
+    iex> UserDataAccess.save(%User{email: "test@example.com", password_hash: "abc123", status: :created})
     :ok
     iex> UserDataAccess.get("test@example.com")
-    %User{email: "test@example.com", password_hash: "abc123", status: "created"}
+    %User{email: "test@example.com", password_hash: "abc123", status: :created}
 
     ### Updates existing
 
-    iex> UserDataAccess.save(%User{email: "test@example.com", password_hash: "changed", status: "created"})
+    iex> UserDataAccess.save(%User{email: "test@example.com", password_hash: "changed", status: :created})
     :ok
     iex> UserDataAccess.all()
-    [%User{email: "test@example.com", password_hash: "changed", status: "created"}]
+    [%User{email: "test@example.com", password_hash: "changed", status: :created}]
 
   """
   @spec save(User.t()) :: :ok | {:error, any()}
@@ -80,7 +94,7 @@ defmodule FCAuth.UserDataAccess do
 
   ## Examples
 
-    iex> UserDataAccess.save(%User{email: "test1@example.com", password_hash: "abc123", status: "created"})
+    iex> UserDataAccess.save(%User{email: "test1@example.com", password_hash: "abc123", status: :created})
     iex> UserDataAccess.delete("test1@example.com")
     iex> UserDataAccess.get("test1@example.com")
     nil
@@ -116,6 +130,13 @@ defmodule FCAuth.UserDataAccess do
     users = :dets.match(table, :"$1")
     |> Enum.map(fn [tuple|_] -> User.to_struct(tuple) end)
 
+    {:reply, users, state}
+  end
+
+  @impl true
+  def handle_call({:all_by_status, status}, _from, %{table: table} = state) do
+    users = :dets.match_object(table, User.status_matcher(status))
+    |> Enum.map(&User.to_struct/1)
     {:reply, users, state}
   end
 

@@ -1,9 +1,11 @@
 defmodule FCAuthWeb.UserController do
   use FCAuthWeb, :controller
   alias FCAuth.UserEngine
+  alias FCAuth.UserDataAccess
 
   def index(conn, _params) do
-    conn
+    all_confirmed = UserDataAccess.all_by_status(:confirmed)
+    conn |> render("users.json", %{users: all_confirmed})
   end
 
   def get(conn, _params) do
@@ -40,7 +42,7 @@ defmodule FCAuthWeb.UserController do
         conn
         |> put_status(404)
         |> render("generic-result.json", %{result: %{error: :not_found}})
-      - ->
+      _ ->
         conn |> render("generic-result.json", %{result: %{ok: true}})
     end
   end

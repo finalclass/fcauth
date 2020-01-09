@@ -27,7 +27,7 @@ defmodule FCAuth.UserEngine do
     iex> UserEngine.login("invalid", "invalid")
     {:error, :invalid_email_or_password}
 
-    ### Also if user status is "created" (so he has not confirmed his email) then return an error
+    ### Also if user status is :created (so he has not confirmed his email) then return an error
     iex> UserEngine.create("test-login@example.com", "my-password")
     iex> UserEngine.login("test-login@example.com", "my-password")
     {:error, :user_not_activated}
@@ -40,7 +40,7 @@ defmodule FCAuth.UserEngine do
       %User{} = user ->
         if Bcrypt.verify_pass(password, user.password_hash) do
           case user.status do
-	    "created" ->
+	    :created ->
               {:error, :user_not_activated}
             _ ->
               {:ok, jwt, _full_claims} = FCAuth.Guardian.encode_and_sign(user, %{"rls" => user.roles})
@@ -65,11 +65,11 @@ defmodule FCAuth.UserEngine do
     iex> user.password_hash
     "$2b$12$P5kPo9e7AVaVnToHx9jwLu2UuDdxxM0hOR9G2C67tmTCFsF/2BTui"
     iex> user.status
-    "created"
+    :created
   
     ### Can't create a user with the same email
 
-    iex> UserDataAccess.save(%User{email: "test101@example.com", password_hash: "test", status: "created"})
+    iex> UserDataAccess.save(%User{email: "test101@example.com", password_hash: "test", status: :created})
     iex> UserEngine.create("test101@example.com", "12345678")
     {:error, ["user already exists"]}
 
@@ -92,7 +92,7 @@ defmodule FCAuth.UserEngine do
       user = %User{
         email: email,
         password_hash: Bcrypt.Base.hash_password(password, salt),
-        status: "created",
+        status: :created,
         signup_token: Bcrypt.gen_salt() <> Bcrypt.gen_salt(),
         signup_token_generated_at: DateTime.utc_now() |> DateTime.to_unix()
       }
@@ -119,7 +119,7 @@ defmodule FCAuth.UserEngine do
     case UserDataAccess.get(userId) do
       nil -> {:error, :not_found}
       user ->
-        if not user.roles |> Enum.member?(role) do
+        if not (user.roles |> Enum.member?(role)) do
           user = %{user | roles: [role | user.roles]}
           :ok = UserDataAccess.save(user)
         end
@@ -127,11 +127,30 @@ defmodule FCAuth.UserEngine do
     end
   end
 
+  @doc ~S"""
+  Remove a role from user
+
+  ## Examples
+ 
+    iex> UserDataAccess.save(%User{email: "test-remove-role@example.com", roles: ["a", "b"]})
+    iex> UserEngine.remove_role("test-remove-role@example.com", "b")
+    :ok
+    iex> UserDataAccess.get("test-remove-role@example.com").roles
+    ["a"]
+
+  ### if user does not exists you get an error
+
+    iex> UserEngine.remove_role("MISSING", "admin")
+    {:error, :not_found}
+  
+  """
+  @spec remove_role(String.t(), String.t()) :: :ok | {:error, :not_found} | {:error, any()}
   def remove_role(userId, role) do
     case UserDataAccess.get(userId) do
       nil -> {:error, :not_found}
       user ->
-        # @TODO implement roles removal
+        user = %{user | roles: Enum.filter(user.roles, &(&1 != role))}
+        UserDataAccess.save(user)
     end
   end
   
@@ -145,7 +164,7 @@ defmodule FCAuth.UserEngine do
     :ok
     iex> user = UserDataAccess.get(user.email)
     iex> user.status
-    "confirmed"
+    :confirmed
     iex> user.signup_token
     ""
     iex> user.signup_token_generated_at
@@ -160,7 +179,7 @@ defmodule FCAuth.UserEngine do
 
     case result do
       {:ok, user} ->
-        user = %{user | status: "confirmed", signup_token: "", signup_token_generated_at: 0}
+        user = %{user | status: :confirmed, signup_token: "", signup_token_generated_at: 0}
         UserDataAccess.save(user)
         :ok
       other -> other
@@ -188,7 +207,7 @@ defmodule FCAuth.UserEngine do
   defp check_signup_token_is_not_expired(error), do: error
 
   @spec check_signup_token_status({:ok, User.t()} | {:error, term()}) :: {:ok, User.t()} | {:error, term()}
-  defp check_signup_token_status({:ok, %{status: "created"} = user}) do
+  defp check_signup_token_status({:ok, %{status: :created} = user}) do
     {:ok, user}
   end
   defp check_signup_token_status({:ok, _}), do: {:error, :user_already_confirmed}
