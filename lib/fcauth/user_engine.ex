@@ -20,7 +20,7 @@ defmodule FCAuth.UserEngine do
     iex> claims["sub"]
     "test-login@example.com"
     iex> claims["rls"] # user roles
-    []
+    %{}
 
     ### On invalid username or password returns error
 
@@ -110,17 +110,21 @@ defmodule FCAuth.UserEngine do
     ### adds new role
 
     iex> UserDataAccess.save(%User{email: "test-roles@example.com"})
-    iex> UserEngine.add_role("test-roles@example.com", "test")
+    iex> UserEngine.add_role("test-roles@example.com", "app", "test")
     iex> UserDataAccess.get("test-roles@example.com") |> Map.get(:roles)
-    ["test"]
+    %{app: ["test"]}
   """
-  @spec add_role(Stirng.t(), String.t()) :: :ok | nil
-  def add_role(userId, role) do
+  @spec add_role(Stirng.t(), String.t() | atom(), String.t()) :: :ok | nil
+  def add_role(userId, app, role) when is_binary(app), do: add_role(userId, String.to_atom(app), role)
+  def add_role(userId, app, role) when is_atom(app) do
     case UserDataAccess.get(userId) do
       nil -> {:error, :not_found}
       user ->
-        if not (user.roles |> Enum.member?(role)) do
-          user = %{user | roles: [role | user.roles]}
+        app_roles = Map.get(user.roles, app, [])
+        if not (app_roles |> Enum.member?(role)) do
+          app_roles = [role | app_roles]
+          roles = Map.put(user.roles, app, app_roles)
+          user = %{user | roles: roles}
           :ok = UserDataAccess.save(user)
         end
         :ok
@@ -132,25 +136,36 @@ defmodule FCAuth.UserEngine do
 
   ## Examples
  
-    iex> UserDataAccess.save(%User{email: "test-remove-role@example.com", roles: ["a", "b"]})
-    iex> UserEngine.remove_role("test-remove-role@example.com", "b")
+    iex> UserDataAccess.save(%User{email: "test-remove-role@example.com", roles: %{app: ["a", "b"], other_app: ["c"]}})
+    iex> UserEngine.remove_role("test-remove-role@example.com", :app, "b")
     :ok
     iex> UserDataAccess.get("test-remove-role@example.com").roles
-    ["a"]
+    %{app: ["a"], other_app: ["c"]}
 
   ### if user does not exists you get an error
 
-    iex> UserEngine.remove_role("MISSING", "admin")
+    iex> UserEngine.remove_role("MISSING", "app", "admin")
     {:error, :not_found}
   
   """
-  @spec remove_role(String.t(), String.t()) :: :ok | {:error, :not_found} | {:error, any()}
-  def remove_role(userId, role) do
+  @spec remove_role(String.t(), String.t() | atom(), String.t()) :: :ok | {:error, :not_found} | {:error, any()}
+  def remove_role(userId, app, role) when is_binary(app), do: remove_role(userId, String.to_atom(app), role)
+  def remove_role(userId, app, role) when is_atom(app) do
     case UserDataAccess.get(userId) do
       nil -> {:error, :not_found}
       user ->
-        user = %{user | roles: Enum.filter(user.roles, &(&1 != role))}
-        UserDataAccess.save(user)
+        if Map.has_key?(user.roles, app) do
+	  app_roles = user.roles[app] |> Enum.filter(&(&1 != role))
+          roles = if length(app_roles) == 0 do
+	    Map.delete(user.roles, app)
+          else
+            Map.put(user.roles, app, app_roles)
+          end
+          user = Map.put(user, :roles, roles)
+          UserDataAccess.save(user)
+        else
+          :ok
+        end
     end
   end
   

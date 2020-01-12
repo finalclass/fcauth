@@ -9,12 +9,13 @@ defmodule FCAuthWeb.Router do
 
   pipeline :protected do
     plug Guardian.Plug.EnsureAuthenticated
-    plug :ensure_admin
+    plug :ensure_fcauth_admin
   end
 
-  defp ensure_admin(conn, _) do
+  defp ensure_fcauth_admin(conn, _) do
     user = Guardian.Plug.current_resource(conn)
-    if user.roles |> Enum.member?("admin") do
+    fcauth_roles = Map.get(user.roles, :fcauth, [])
+    if fcauth_roles |> Enum.member?("admin") do
       conn
     else
       conn
@@ -40,8 +41,8 @@ defmodule FCAuthWeb.Router do
     pipe_through :public
     pipe_through :protected
 
-    put "/:id/roles/:role", UserController, :add_role
-    delete "/:id/roles/:role", UserController, :remove_role
+    put "/:id/roles/:app/:role", UserController, :add_role
+    delete "/:id/roles/:app/:role", UserController, :remove_role
     get "/", UserController, :index
     get "/:id", UserController, :get
   #   post "/", UserController, :create

@@ -1,7 +1,7 @@
 defmodule FCAuth.User do
   alias FCAuth.User
 
-  defstruct email: "", password_hash: "", status: :created, signup_token: "", signup_token_generated_at: 0, roles: []
+  defstruct email: "", password_hash: "", status: :created, signup_token: "", signup_token_generated_at: 0, roles: %{}
   @type t :: %User{
     email: String.t(),
     password_hash: String.t(),

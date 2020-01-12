@@ -27,8 +27,8 @@ defmodule FCAuthWeb.UserController do
     conn
   end
 
-  def add_role(conn, %{"id" => userId, "role" => role}) do
-    case UserEngine.add_role(userId, role) do
+  def add_role(conn, %{"id" => userId, "app" => app, "role" => role}) do
+    case UserEngine.add_role(userId, app, role) do
       {:error, :not_found} ->
         conn
         |> put_status(404)
@@ -40,8 +40,8 @@ defmodule FCAuthWeb.UserController do
     end
   end
 
-  def remove_role(conn, %{"id" => userId, "role" => role}) do
-    case UserEngine.remove_role(userId, role) do
+  def remove_role(conn, %{"id" => userId, "app" => app, "role" => role}) do
+    case UserEngine.remove_role(userId, app, role) do
       {:error, :not_found} ->
         conn
         |> put_status(404)
