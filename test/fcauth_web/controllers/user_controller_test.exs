@@ -130,4 +130,5 @@ defmodule FCAuthWeb.UserControllerTest do
       assert get_user(ctx, "MISSING").status == 404
     end
   end
+
 end
