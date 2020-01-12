@@ -16,7 +16,7 @@ defmodule FCAuthWeb.SessionControllerTest do
   @tag :login
   test "failes on ivalid username+password", %{conn: conn} do
     conn =
-      post(conn, Routes.session_path(conn, :login), %{
+      post(conn, Routes.session_path(conn, :login, "fcauth"), %{
         email: "invalid@example.com",
         password: "my-password"
       })
@@ -28,7 +28,7 @@ defmodule FCAuthWeb.SessionControllerTest do
   @tag :login
   test "on proper email+password return jwt token", %{conn: conn} do
     conn =
-      post(conn, Routes.session_path(conn, :login), %{
+      post(conn, Routes.session_path(conn, :login, "fcauth"), %{
         email: "test-login@example.com",
         password: "my-password"
       })

@@ -1,11 +1,10 @@
 defmodule FCAuth.UserEngine do
-
   alias FCAuth.User
   alias FCAuth.UserDataAccess
 
   @doc ~S"""
   Generates JWT token
-  
+
   ## Examples
 
     ### Returns JWT if login and password are correct
@@ -13,37 +12,48 @@ defmodule FCAuth.UserEngine do
     iex> UserEngine.create("test-login@example.com", "my-password")
     iex> user = UserDataAccess.get("test-login@example.com")
     iex> UserEngine.confirm(user.signup_token)
-    iex> {:ok, jwt} = UserEngine.login(user.email, "my-password")
+    iex> {:ok, jwt} = UserEngine.login(:fcauth, user.email, "my-password")
     iex> is_binary(jwt)
     true
     iex> {:ok, claims} = FCAuth.Guardian.decode_and_verify(jwt)
     iex> claims["sub"]
     "test-login@example.com"
     iex> claims["rls"] # user roles
-    %{}
+    []
+    iex> claims["app"]
+    "fcauth"
 
     ### On invalid username or password returns error
 
-    iex> UserEngine.login("invalid", "invalid")
+    iex> UserEngine.login("fcauth", "invalid", "invalid")
     {:error, :invalid_email_or_password}
 
     ### Also if user status is :created (so he has not confirmed his email) then return an error
     iex> UserEngine.create("test-login@example.com", "my-password")
-    iex> UserEngine.login("test-login@example.com", "my-password")
+    iex> UserEngine.login("fcauth", "test-login@example.com", "my-password")
     {:error, :user_not_activated}
-  
+
   """
-  @spec login(String.t(), String.t()) :: {:ok, term()}
-  def login(email, password) do
+  @spec login(String.t() | atom(), String.t(), String.t()) :: {:ok, term()}
+  def login(app, email, password) when is_atom(app), do: login(Atom.to_string(app), email, password)
+  def login(app, email, password) do
     case UserDataAccess.get(email) do
-      nil -> {:error, :invalid_email_or_password}
+      nil ->
+        {:error, :invalid_email_or_password}
+
       %User{} = user ->
         if Bcrypt.verify_pass(password, user.password_hash) do
           case user.status do
-	    :created ->
+            :created ->
               {:error, :user_not_activated}
+
             _ ->
-              {:ok, jwt, _full_claims} = FCAuth.Guardian.encode_and_sign(user, %{"rls" => user.roles})
+              {:ok, jwt, _full_claims} =
+                FCAuth.Guardian.encode_and_sign(user, %{
+                  "rls" => user.roles[app] || [],
+                  "app" => app
+                })
+
               {:ok, jwt}
           end
         else
@@ -51,14 +61,14 @@ defmodule FCAuth.UserEngine do
         end
     end
   end
-  
+
   @doc ~S"""
   Create a new user
 
   ## Examples
 
     ### Creates a user
-  
+
     iex> {:ok, user} = UserEngine.create("test100@example.com", "12345678")
     iex> user.email
     "test100@example.com"
@@ -66,7 +76,7 @@ defmodule FCAuth.UserEngine do
     "$2b$12$P5kPo9e7AVaVnToHx9jwLu2UuDdxxM0hOR9G2C67tmTCFsF/2BTui"
     iex> user.status
     :created
-  
+
     ### Can't create a user with the same email
 
     iex> UserDataAccess.save(%User{email: "test101@example.com", password_hash: "test", status: :created})
@@ -81,14 +91,16 @@ defmodule FCAuth.UserEngine do
   """
   @spec create(String.t(), String.t()) :: {:ok, User.t()} | {:error, list(String.t())}
   def create(email, password) do
-    validation_errors = create_validation_errors()
-    |> validate_user_not_exist(email)
-    |> validate_password_length(password)
+    validation_errors =
+      create_validation_errors()
+      |> validate_user_not_exist(email)
+      |> validate_password_length(password)
 
     if has_errors(validation_errors) do
       {:error, validation_errors}
     else
       salt = Application.get_env(:fcauth, :password_salt) || Bcrypt.gen_salt()
+
       user = %User{
         email: email,
         password_hash: Bcrypt.Base.hash_password(password, salt),
@@ -96,17 +108,17 @@ defmodule FCAuth.UserEngine do
         signup_token: Bcrypt.gen_salt() <> Bcrypt.gen_salt(),
         signup_token_generated_at: DateTime.utc_now() |> DateTime.to_unix()
       }
+
       UserDataAccess.save(user)
       {:ok, user}
     end
   end
 
-
   @doc ~S"""
   Adds a role to a user
 
   ## Examples
-  
+
     ### adds new role
 
     iex> UserDataAccess.save(%User{email: "test-roles@example.com"})
@@ -115,18 +127,24 @@ defmodule FCAuth.UserEngine do
     %{app: ["test"]}
   """
   @spec add_role(Stirng.t(), String.t() | atom(), String.t()) :: :ok | nil
-  def add_role(userId, app, role) when is_binary(app), do: add_role(userId, String.to_atom(app), role)
+  def add_role(userId, app, role) when is_binary(app),
+    do: add_role(userId, String.to_atom(app), role)
+
   def add_role(userId, app, role) when is_atom(app) do
     case UserDataAccess.get(userId) do
-      nil -> {:error, :not_found}
+      nil ->
+        {:error, :not_found}
+
       user ->
         app_roles = Map.get(user.roles, app, [])
+
         if not (app_roles |> Enum.member?(role)) do
           app_roles = [role | app_roles]
           roles = Map.put(user.roles, app, app_roles)
           user = %{user | roles: roles}
           :ok = UserDataAccess.save(user)
         end
+
         :ok
     end
   end
@@ -135,7 +153,7 @@ defmodule FCAuth.UserEngine do
   Remove a role from user
 
   ## Examples
- 
+
     iex> UserDataAccess.save(%User{email: "test-remove-role@example.com", roles: %{app: ["a", "b"], other_app: ["c"]}})
     iex> UserEngine.remove_role("test-remove-role@example.com", :app, "b")
     :ok
@@ -146,21 +164,29 @@ defmodule FCAuth.UserEngine do
 
     iex> UserEngine.remove_role("MISSING", "app", "admin")
     {:error, :not_found}
-  
+
   """
-  @spec remove_role(String.t(), String.t() | atom(), String.t()) :: :ok | {:error, :not_found} | {:error, any()}
-  def remove_role(userId, app, role) when is_binary(app), do: remove_role(userId, String.to_atom(app), role)
+  @spec remove_role(String.t(), String.t() | atom(), String.t()) ::
+          :ok | {:error, :not_found} | {:error, any()}
+  def remove_role(userId, app, role) when is_binary(app),
+    do: remove_role(userId, String.to_atom(app), role)
+
   def remove_role(userId, app, role) when is_atom(app) do
     case UserDataAccess.get(userId) do
-      nil -> {:error, :not_found}
+      nil ->
+        {:error, :not_found}
+
       user ->
         if Map.has_key?(user.roles, app) do
-	  app_roles = user.roles[app] |> Enum.filter(&(&1 != role))
-          roles = if length(app_roles) == 0 do
-	    Map.delete(user.roles, app)
-          else
-            Map.put(user.roles, app, app_roles)
-          end
+          app_roles = user.roles[app] |> Enum.filter(&(&1 != role))
+
+          roles =
+            if length(app_roles) == 0 do
+              Map.delete(user.roles, app)
+            else
+              Map.put(user.roles, app, app_roles)
+            end
+
           user = Map.put(user, :roles, roles)
           UserDataAccess.save(user)
         else
@@ -168,12 +194,12 @@ defmodule FCAuth.UserEngine do
         end
     end
   end
-  
+
   @doc ~S"""
   Confirms user by his signup token
 
   ## Examples
-  
+
     iex> {:ok, user} = UserEngine.create("test200@example.com", "12345678")
     iex> UserEngine.confirm(user.signup_token)
     :ok
@@ -187,21 +213,25 @@ defmodule FCAuth.UserEngine do
   """
   @spec confirm(String.t()) :: :ok | {:error, term()}
   def confirm(token) do
-    result = token
-    |> check_signup_token_exists()
-    |> check_signup_token_status()
-    |> check_signup_token_is_not_expired()
+    result =
+      token
+      |> check_signup_token_exists()
+      |> check_signup_token_status()
+      |> check_signup_token_is_not_expired()
 
     case result do
       {:ok, user} ->
         user = %{user | status: :confirmed, signup_token: "", signup_token_generated_at: 0}
         UserDataAccess.save(user)
         :ok
-      other -> other
+
+      other ->
+        other
     end
   end
 
-  @spec check_signup_token_exists(String.t()) :: {:ok, User.t()} | {:error, :token_does_not_exists}
+  @spec check_signup_token_exists(String.t()) ::
+          {:ok, User.t()} | {:error, :token_does_not_exists}
   defp check_signup_token_exists(token) do
     case UserDataAccess.find_by_signup_token(token) do
       %User{} = user -> {:ok, user}
@@ -209,34 +239,40 @@ defmodule FCAuth.UserEngine do
     end
   end
 
-  @spec check_signup_token_is_not_expired({:ok, User.t()} | {:error, term()}) :: {:ok, User.t()} | {:error, term()}
+  @spec check_signup_token_is_not_expired({:ok, User.t()} | {:error, term()}) ::
+          {:ok, User.t()} | {:error, term()}
   defp check_signup_token_is_not_expired({:ok, user}) do
     now = DateTime.utc_now() |> DateTime.to_unix()
-    token_validity = 24 * 60 * 60 # tokens are valid 1 day
-    if (now - user.signup_token_generated_at > token_validity) do
+    # tokens are valid 1 day
+    token_validity = 24 * 60 * 60
+
+    if now - user.signup_token_generated_at > token_validity do
       {:error, :token_expired}
     else
       {:ok, user}
     end
   end
+
   defp check_signup_token_is_not_expired(error), do: error
 
-  @spec check_signup_token_status({:ok, User.t()} | {:error, term()}) :: {:ok, User.t()} | {:error, term()}
+  @spec check_signup_token_status({:ok, User.t()} | {:error, term()}) ::
+          {:ok, User.t()} | {:error, term()}
   defp check_signup_token_status({:ok, %{status: :created} = user}) do
     {:ok, user}
   end
+
   defp check_signup_token_status({:ok, _}), do: {:error, :user_already_confirmed}
   defp check_signup_token_status(error), do: error
-  
+
   @spec validate_password_length(list(String.t()), String.t()) :: list(String.t())
   defp validate_password_length(errors, password) do
-    if (String.length(password) < 8) do
+    if String.length(password) < 8 do
       ["password too short (minimum 8 chars)" | errors]
     else
       errors
     end
   end
-  
+
   @spec validate_user_not_exist(list(String.t()), String.t()) :: list(String.t())
   defp validate_user_not_exist(errors, email) do
     case UserDataAccess.get(email) do
@@ -251,5 +287,4 @@ defmodule FCAuth.UserEngine do
 
   @spec create_validation_errors() :: list(String.t())
   defp create_validation_errors(), do: []
-  
 end

@@ -18,7 +18,7 @@ defmodule FCAuthWeb.UserControllerTest do
     })
 
     loginResult =
-      post(conn, Routes.session_path(conn, :login), %{
+      post(conn, Routes.session_path(conn, :login, "fcauth"), %{
         email: email,
         password: pass
       })

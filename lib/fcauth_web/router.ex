@@ -28,7 +28,7 @@ defmodule FCAuthWeb.Router do
   scope "/", FCAuthWeb do
     pipe_through :public
 
-    post "/login", SessionController, :login
+    post "/:app/login", SessionController, :login
 
     post "/sign-up", SignupController, :register
     get "/sign-up/confirm-email/:token", SignupController, :confirm
