@@ -35,7 +35,7 @@ defmodule FCAuth.UserEngine do
 
   """
   @spec login(String.t() | atom(), String.t(), String.t()) :: {:ok, term()}
-  def login(app, email, password) when is_atom(app), do: login(Atom.to_string(app), email, password)
+  def login(app, email, password) when is_binary(app), do: login(String.to_atom(app), email, password)
   def login(app, email, password) do
     case UserDataAccess.get(email) do
       nil ->
@@ -50,8 +50,8 @@ defmodule FCAuth.UserEngine do
             _ ->
               {:ok, jwt, _full_claims} =
                 FCAuth.Guardian.encode_and_sign(user, %{
-                  "rls" => user.roles[app] || [],
-                  "app" => app
+                  "rls" => Map.get(user.roles, app, []),
+                  "app" => Atom.to_string(app)
                 })
 
               {:ok, jwt}

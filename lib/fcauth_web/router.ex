@@ -13,9 +13,10 @@ defmodule FCAuthWeb.Router do
   end
 
   defp ensure_fcauth_admin(conn, _) do
-    user = Guardian.Plug.current_resource(conn)
-    fcauth_roles = Map.get(user.roles, :fcauth, [])
-    if fcauth_roles |> Enum.member?("admin") do
+    claims = Guardian.Plug.current_claims(conn)
+    roles = Map.get(claims, "rls", [])
+
+    if claims["app"] == "fcauth" and roles |> Enum.member?("admin") do
       conn
     else
       conn
